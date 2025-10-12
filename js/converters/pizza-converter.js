@@ -120,10 +120,10 @@ class PizzaConverter {
             { key: "Beverage", searchTerms: ["Beverage"] },
             { key: "Catering", searchTerms: ["Catering"] },
             { key: "Dessert", searchTerms: ["Dessert"] },
-            { key: "Jet's Bread", searchTerms: ["Jet's Bread", "Jets Bread"] },
+            { key: "Jet's Bread", searchTerms: ["Jet's Bread", "Jets Bread", "Jet's", "Jets"] },
             { key: "Pizza", searchTerms: ["Pizza"] },
             { key: "Salad", searchTerms: ["Salad"] },
-            { key: "Sandwiches", searchTerms: ["Sandwiches", "Sandwich"] },
+            { key: "Sandwiches", searchTerms: ["Sandwiches", "Sandwich", "Subs"] },
             { key: "Sides", searchTerms: ["Sides", "Side"] },
             { key: "Wings", searchTerms: ["Wings", "Wing"] }
         ];
@@ -131,13 +131,15 @@ class PizzaConverter {
         // Strategy 1: Line-by-line extraction
         const lines = sectionText.split('\n');
         console.log(`📊 Analyzing ${lines.length} lines in section`);
+        console.log(`📊 First 10 lines:`, lines.slice(0, 10));
 
         for (const { key, searchTerms } of targetCategories) {
             let found = false;
 
             for (const line of lines) {
-                // Skip modifier lines and empty lines
-                if (!line.trim() || line.includes('(modifier)')) continue;
+                // Skip modifier lines, empty lines, and header lines
+                if (!line.trim() || line.includes('(modifier)') ||
+                    line.includes('Category') || line.includes('Units') || line.includes('Gross')) continue;
 
                 // Check if line contains the category name
                 const lineContainsCategory = searchTerms.some(term =>
@@ -147,11 +149,11 @@ class PizzaConverter {
                 if (lineContainsCategory) {
                     console.log(`🔍 Found line for ${key}: "${line}"`);
 
-                    // Extract all numbers from the line
-                    const numbers = line.match(/([\d,]+\.[\d]{2})/g);
+                    // Extract all numbers from the line (including integers for Units)
+                    const numbers = line.match(/([\d,]+(?:\.[\d]{2})?)/g);
                     if (numbers && numbers.length >= 2) {
-                        // Second number is Gross (Units is first, Gross is second)
-                        const value = parseFloat(numbers[1].replace(/,/g, ''));
+                        // Last number is Gross (most reliable), previous is Units
+                        const value = parseFloat(numbers[numbers.length - 1].replace(/,/g, ''));
                         if (!isNaN(value) && value > 0) {
                             categories[key] = value;
                             console.log(`✓ ${key}: ${value}`);
@@ -173,28 +175,34 @@ class PizzaConverter {
 
             // Strategy 2: Token-based extraction (if line-based failed)
             if (!found) {
-                // Split section into words and look for pattern: CategoryName Units Gross
+                // Split section into words and look for pattern: CategoryName ... Numbers
                 const tokens = sectionText.split(/\s+/);
+                console.log(`🔍 Trying token-based for ${key}, tokens: ${tokens.length}`);
 
                 for (let i = 0; i < tokens.length; i++) {
                     const matchesCategory = searchTerms.some(term =>
                         tokens[i].toLowerCase().includes(term.toLowerCase())
                     );
 
-                    if (matchesCategory && i + 2 < tokens.length) {
-                        // Look ahead for two numbers: units (i+1) and gross (i+2)
-                        const unitsMatch = tokens[i + 1].match(/^(\d+)$/);
-                        const grossMatch = tokens[i + 2].match(/^([\d,]+\.[\d]{2})$/);
+                    if (matchesCategory) {
+                        console.log(`🔍 Found token "${tokens[i]}" for ${key} at position ${i}`);
+                        console.log(`🔍 Next 5 tokens:`, tokens.slice(i + 1, i + 6));
 
-                        if (unitsMatch && grossMatch) {
-                            const value = parseFloat(grossMatch[1].replace(/,/g, ''));
-                            if (!isNaN(value) && value > 0) {
-                                categories[key] = value;
-                                console.log(`✓ ${key}: ${value} (token-based)`);
-                                found = true;
-                                break;
+                        // Look ahead for numbers (could be separated by whitespace)
+                        for (let j = i + 1; j < Math.min(i + 10, tokens.length); j++) {
+                            // Match money format with 2 decimal places
+                            const grossMatch = tokens[j].match(/^([\d,]+\.[\d]{2})$/);
+                            if (grossMatch) {
+                                const value = parseFloat(grossMatch[1].replace(/,/g, ''));
+                                if (!isNaN(value) && value > 0) {
+                                    categories[key] = value;
+                                    console.log(`✓ ${key}: ${value} (token-based at offset ${j - i})`);
+                                    found = true;
+                                    break;
+                                }
                             }
                         }
+                        if (found) break;
                     }
                 }
             }
