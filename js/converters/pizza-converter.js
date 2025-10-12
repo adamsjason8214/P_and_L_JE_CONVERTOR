@@ -77,17 +77,42 @@ class PizzaConverter {
     }
 
     extractItemCategories(text) {
-        // Look for ITEM CATEGORIES SOLD section
-        const categorySection = text.match(/ITEM\s+CATEGORIES\s+SOLD([\s\S]*?)(?:Sales\/Tender|SpeedLine|$)/i);
+        // Look for ITEM CATEGORIES SOLD section with table header
+        // The actual data table has "Category Units Gross" header, not just the title
+        const categorySection = text.match(/ITEM\s+CATEGORIES\s+SOLD\s+Category\s+Units\s+Gross([\s\S]+?)(?:Sales\/Tender\s+Reconciliation|$)/i);
+
         if (!categorySection) {
-            console.warn('⚠️ ITEM CATEGORIES SOLD section not found in PDF');
-            return {};
+            console.warn('⚠️ ITEM CATEGORIES SOLD table not found in PDF');
+            console.log('🔍 Trying alternative extraction method...');
+
+            // Fallback: Look for just "Category Units Gross" which only appears in the table
+            const fallbackMatch = text.match(/Category\s+Units\s+Gross([\s\S]+?)(?:Sales\/Tender\s+Reconciliation|SpeedLine|$)/i);
+            if (!fallbackMatch) {
+                console.error('❌ Could not find ITEM CATEGORIES SOLD table with any method');
+                return {};
+            }
+
+            const sectionText = fallbackMatch[1];
+            console.log('📊 Found table using fallback method');
+            console.log('📊 Section text (first 500 chars):', sectionText.substring(0, 500));
+            return this.parseItemCategoriesTable(sectionText);
         }
 
         const sectionText = categorySection[1];
-        console.log('📊 ITEM CATEGORIES SOLD section found');
-        console.log('📊 Section text (first 300 chars):', sectionText.substring(0, 300));
+        console.log('📊 ITEM CATEGORIES SOLD table found successfully');
+        console.log('📊 Section text (first 500 chars):', sectionText.substring(0, 500));
 
+        // Validate we got the right section (should be substantial, not just nav menu)
+        if (sectionText.length < 100) {
+            console.error('❌ Section too short - likely captured navigation menu instead of table');
+            return {};
+        }
+
+        const categories = this.parseItemCategoriesTable(sectionText);
+        return categories;
+    }
+
+    parseItemCategoriesTable(sectionText) {
         const categories = {};
 
         // Target categories we're looking for
