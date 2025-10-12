@@ -137,9 +137,11 @@ class PizzaConverter {
             let found = false;
 
             for (const line of lines) {
-                // Skip modifier lines, empty lines, and header lines
-                if (!line.trim() || line.includes('(modifier)') ||
-                    line.includes('Category') || line.includes('Units') || line.includes('Gross')) continue;
+                // Skip empty lines and header lines
+                if (!line.trim() || line.includes('Category') || line.includes('Units') || line.includes('Gross')) continue;
+
+                // CRITICAL: Skip modifier lines explicitly - they have 0.00 and "(modifier)" in the same line
+                if (line.includes('(modifier)')) continue;
 
                 // Check if line contains the category name
                 const lineContainsCategory = searchTerms.some(term =>
@@ -180,6 +182,11 @@ class PizzaConverter {
                 console.log(`🔍 Trying token-based for ${key}, tokens: ${tokens.length}`);
 
                 for (let i = 0; i < tokens.length; i++) {
+                    // Skip if this token or the next one is "(modifier)"
+                    if (tokens[i].includes('(modifier)') || (i + 1 < tokens.length && tokens[i + 1].includes('(modifier)'))) {
+                        continue;
+                    }
+
                     const matchesCategory = searchTerms.some(term =>
                         tokens[i].toLowerCase().includes(term.toLowerCase())
                     );
@@ -190,6 +197,9 @@ class PizzaConverter {
 
                         // Look ahead for numbers (could be separated by whitespace)
                         for (let j = i + 1; j < Math.min(i + 10, tokens.length); j++) {
+                            // Skip "(modifier)" tokens
+                            if (tokens[j].includes('(modifier)')) continue;
+
                             // Match money format with 2 decimal places
                             const grossMatch = tokens[j].match(/^([\d,]+\.[\d]{2})$/);
                             if (grossMatch) {
