@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickBooks Journal Entry Converter - Pizza</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>QuickBooks Journal Entry Converter</h1>
+            <p class="subtitle">Pizza Brand - Sales Journal Entries</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <h2>Upload POS Reports</h2>
+                <p class="instructions">Upload multiple PDF files (End of Month reports from SpeedLine POS)</p>
+
+                <div class="upload-area" id="uploadArea">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Drop PDF files here or click to browse</p>
+                    <input type="file" id="fileInput" multiple accept=".pdf" hidden>
+                </div>
+
+                <div class="file-list" id="fileList"></div>
+
+                <div class="date-input-section">
+                    <label for="journalDate">Journal Entry Date:</label>
+                    <input type="date" id="journalDate" required>
+                </div>
+
+                <button id="processBtn" class="btn-primary" disabled>Process Files</button>
+            </div>
+
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <h3>Processing...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Preparing...</p>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>Results</h2>
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>Consolidated Report</h3>
+                        <p>Side-by-side comparison of all stores</p>
+                        <button class="btn-download" id="downloadConsolidated">Download CSV</button>
+                    </div>
+                    <div class="result-card">
+                        <h3>Journal Entries</h3>
+                        <p id="jeCount">0 files ready</p>
+                        <button class="btn-download" id="downloadJournalEntries">Download All (ZIP)</button>
+                    </div>
+                </div>
+                <button class="btn-secondary" id="resetBtn">Process More Files</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Built for Pizza Brand | QuickBooks Compatible Format</p>
+        </footer>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Application Scripts -->
+    <script src="js/pdf-parser.js"></script>
+    <script src="js/csv-generator.js"></script>
+    <script src="js/converters/pizza-converter.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
