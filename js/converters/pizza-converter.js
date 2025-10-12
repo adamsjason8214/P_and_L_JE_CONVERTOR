@@ -85,56 +85,87 @@ class PizzaConverter {
         }
 
         const sectionText = categorySection[1];
-        console.log('📊 Found ITEM CATEGORIES SOLD section:', sectionText.substring(0, 200) + '...');
+        console.log('📊 ITEM CATEGORIES SOLD section found');
+        console.log('📊 Section text (first 300 chars):', sectionText.substring(0, 300));
 
         const categories = {};
 
-        // Target categories we're looking for (exact names as they appear in PDF)
+        // Target categories we're looking for
         const targetCategories = [
-            { key: "Beverage", pattern: /^Beverage\s+\d+\s+([\d,]+\.[\d]{2})/im },
-            { key: "Catering", pattern: /^Catering\s+\d+\s+([\d,]+\.[\d]{2})/im },
-            { key: "Dessert", pattern: /^Dessert\s+\d+\s+([\d,]+\.[\d]{2})/im },
-            { key: "Jet's Bread", pattern: /^Jet'?s\s+Bread\s+\d+\s+([\d,]+\.[\d]{2})/im },
-            { key: "Pizza", pattern: /^Pizza\s+\d+\s+([\d,]+\.[\d]{2})/im },
-            { key: "Salad", pattern: /^Salad\s+\d+\s+([\d,]+\.[\d]{2})/im },
-            { key: "Sandwiches", pattern: /^Sandwiches?\s+\d+\s+([\d,]+\.[\d]{2})/im },
-            { key: "Sides", pattern: /^Sides?\s+\d+\s+([\d,]+\.[\d]{2})/im },
-            { key: "Wings", pattern: /^Wings?\s+\d+\s+([\d,]+\.[\d]{2})/im }
+            { key: "Beverage", searchTerms: ["Beverage"] },
+            { key: "Catering", searchTerms: ["Catering"] },
+            { key: "Dessert", searchTerms: ["Dessert"] },
+            { key: "Jet's Bread", searchTerms: ["Jet's Bread", "Jets Bread"] },
+            { key: "Pizza", searchTerms: ["Pizza"] },
+            { key: "Salad", searchTerms: ["Salad"] },
+            { key: "Sandwiches", searchTerms: ["Sandwiches", "Sandwich"] },
+            { key: "Sides", searchTerms: ["Sides", "Side"] },
+            { key: "Wings", searchTerms: ["Wings", "Wing"] }
         ];
 
-        // Line-by-line extraction (more robust than section-wide patterns)
+        // Strategy 1: Line-by-line extraction
         const lines = sectionText.split('\n');
+        console.log(`📊 Analyzing ${lines.length} lines in section`);
 
-        for (const { key, pattern } of targetCategories) {
+        for (const { key, searchTerms } of targetCategories) {
             let found = false;
 
-            // Try pattern match first
-            const match = sectionText.match(pattern);
-            if (match && match[1]) {
-                const value = parseFloat(match[1].replace(/,/g, ''));
-                if (!isNaN(value)) {
-                    categories[key] = value;
-                    console.log(`✓ ${key}: ${value}`);
-                    found = true;
+            for (const line of lines) {
+                // Skip modifier lines and empty lines
+                if (!line.trim() || line.includes('(modifier)')) continue;
+
+                // Check if line contains the category name
+                const lineContainsCategory = searchTerms.some(term =>
+                    line.toLowerCase().includes(term.toLowerCase())
+                );
+
+                if (lineContainsCategory) {
+                    console.log(`🔍 Found line for ${key}: "${line}"`);
+
+                    // Extract all numbers from the line
+                    const numbers = line.match(/([\d,]+\.[\d]{2})/g);
+                    if (numbers && numbers.length >= 2) {
+                        // Second number is Gross (Units is first, Gross is second)
+                        const value = parseFloat(numbers[1].replace(/,/g, ''));
+                        if (!isNaN(value) && value > 0) {
+                            categories[key] = value;
+                            console.log(`✓ ${key}: ${value}`);
+                            found = true;
+                            break;
+                        }
+                    } else if (numbers && numbers.length === 1) {
+                        // Only one number found, might be the Gross value
+                        const value = parseFloat(numbers[0].replace(/,/g, ''));
+                        if (!isNaN(value) && value > 0) {
+                            categories[key] = value;
+                            console.log(`✓ ${key}: ${value} (single number)`);
+                            found = true;
+                            break;
+                        }
+                    }
                 }
             }
 
-            // Fallback: line-by-line search for more flexible matching
+            // Strategy 2: Token-based extraction (if line-based failed)
             if (!found) {
-                for (const line of lines) {
-                    // Skip modifier lines
-                    if (line.includes('(modifier)')) continue;
+                // Split section into words and look for pattern: CategoryName Units Gross
+                const tokens = sectionText.split(/\s+/);
 
-                    // Check if line starts with category name
-                    const categoryRegex = new RegExp('^' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-                    if (categoryRegex.test(line.trim())) {
-                        // Extract rightmost number (Gross column)
-                        const numbers = line.match(/([\d,]+\.[\d]{2})/g);
-                        if (numbers && numbers.length > 0) {
-                            const value = parseFloat(numbers[numbers.length - 1].replace(/,/g, ''));
+                for (let i = 0; i < tokens.length; i++) {
+                    const matchesCategory = searchTerms.some(term =>
+                        tokens[i].toLowerCase().includes(term.toLowerCase())
+                    );
+
+                    if (matchesCategory && i + 2 < tokens.length) {
+                        // Look ahead for two numbers: units (i+1) and gross (i+2)
+                        const unitsMatch = tokens[i + 1].match(/^(\d+)$/);
+                        const grossMatch = tokens[i + 2].match(/^([\d,]+\.[\d]{2})$/);
+
+                        if (unitsMatch && grossMatch) {
+                            const value = parseFloat(grossMatch[1].replace(/,/g, ''));
                             if (!isNaN(value) && value > 0) {
                                 categories[key] = value;
-                                console.log(`✓ ${key}: ${value} (fallback)`);
+                                console.log(`✓ ${key}: ${value} (token-based)`);
                                 found = true;
                                 break;
                             }
@@ -144,7 +175,7 @@ class PizzaConverter {
             }
 
             if (!found) {
-                console.warn(`⚠️ ${key}: not found`);
+                console.warn(`⚠️ ${key}: not found in ITEM CATEGORIES SOLD`);
                 categories[key] = 0;
             }
         }

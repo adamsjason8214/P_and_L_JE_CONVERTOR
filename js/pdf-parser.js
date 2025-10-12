@@ -13,23 +13,60 @@ class PDFParser {
 
             let fullText = '';
 
-            // Extract text from all pages
+            // Extract text from all pages, preserving line structure
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 const page = await pdf.getPage(pageNum);
                 const textContent = await page.getTextContent();
 
-                const pageText = textContent.items
-                    .map(item => item.str)
-                    .join(' ');
+                // Group text items by Y coordinate (same line)
+                const lines = this.groupTextItemsByLine(textContent.items);
+
+                // Join items on each line with space, then join lines with newline
+                const pageText = lines.map(line => line.join(' ')).join('\n');
 
                 fullText += pageText + '\n';
             }
 
+            console.log('📄 Extracted PDF text (first 500 chars):', fullText.substring(0, 500));
             return fullText;
         } catch (error) {
             console.error('Error extracting PDF text:', error);
             throw new Error(`Failed to extract text from ${file.name}: ${error.message}`);
         }
+    }
+
+    // Group text items that are on the same line (similar Y coordinates)
+    groupTextItemsByLine(items) {
+        if (!items || items.length === 0) return [];
+
+        const lines = [];
+        let currentLine = [];
+        let lastY = null;
+        const yTolerance = 2; // pixels - items within this range are on same line
+
+        for (const item of items) {
+            const y = item.transform[5]; // Y coordinate
+
+            if (lastY === null || Math.abs(y - lastY) <= yTolerance) {
+                // Same line
+                currentLine.push(item.str);
+            } else {
+                // New line
+                if (currentLine.length > 0) {
+                    lines.push(currentLine);
+                }
+                currentLine = [item.str];
+            }
+
+            lastY = y;
+        }
+
+        // Add last line
+        if (currentLine.length > 0) {
+            lines.push(currentLine);
+        }
+
+        return lines;
     }
 
     // Extract Store ID from filename (e.g., "fl008" from "September EOM report.pdf")
