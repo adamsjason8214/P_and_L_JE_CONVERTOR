@@ -220,4 +220,92 @@ class CSVGenerator {
         link.click();
         document.body.removeChild(link);
     }
+
+    // ========== PAYROLL JOURNAL ENTRY METHODS ==========
+
+    // Generate Payroll Journal Entry CSV (QuickBooks format)
+    generatePayrollJournalEntryCSV(payrollData, journalDate, journalNo) {
+        const lines = [];
+
+        // Header
+        lines.push('*JournalNo,*JournalDate,*AccountName,*Debits,*Credits,Description,Name,Currency,Location,Class');
+
+        const description = 'To record payroll';
+        const currency = 'USD';
+
+        // Helper function to add line
+        const addLine = (accountName, debits, credits, name = '') => {
+            const debitStr = debits > 0 ? debits.toFixed(2) : '';
+            const creditStr = credits > 0 ? credits.toFixed(2) : '';
+            lines.push(`${journalNo},${journalDate},${accountName},${debitStr},${creditStr},${description},${name},${currency},,`);
+        };
+
+        const totals = payrollData.reportTotals;
+
+        // DEBITS: Salaries & Wages (REG + OT + HOLIDAY + RETRO + CASH)
+        const salariesWages =
+            (totals.earnings.REG || 0) +
+            (totals.earnings.OT || 0) +
+            (totals.earnings.HOLIDAY || 0) +
+            (totals.earnings.RETRO || 0) +
+            (totals.earnings.CASH || 0);
+
+        if (salariesWages > 0) {
+            addLine('Payroll Expenses:Salaries & Wages:Salaries & Wages', salariesWages, 0);
+        }
+
+        // DEBITS: Management Bonuses
+        if (totals.earnings.BONUS > 0) {
+            addLine('Payroll Expenses:Salaries & Wages:Management Bonuses', totals.earnings.BONUS, 0);
+        }
+
+        // DEBITS: Guaranteed Payments
+        if (totals.earnings.DRAW > 0) {
+            addLine('Payroll Expenses:Guaranteed Payments:Guaranteed Payments', totals.earnings.DRAW, 0);
+        }
+
+        // DEBITS: Guaranteed Payments - Bonus
+        if (totals.earnings.DBONU > 0) {
+            addLine('Payroll Expenses:Guaranteed Payments:Guaranteed Payments - Bonus', totals.earnings.DBONU, 0);
+        }
+
+        // DEBITS: Payroll Taxes (Employer portion)
+        const payrollTaxes =
+            (totals.employerTaxes['MED-R'] || 0) +
+            (totals.employerTaxes['SS-R'] || 0) +
+            (totals.employerTaxes.FLSUI || 0) +
+            (totals.employerTaxes.FUTA || 0);
+
+        if (payrollTaxes > 0) {
+            addLine('Payroll Expenses:Payroll Taxes', payrollTaxes, 0);
+        }
+
+        // DEBITS: Mileage Reimbursement
+        if (totals.deductions.MILES > 0) {
+            addLine('Delivery Income:Mileage Reimbursement', totals.deductions.MILES, 0);
+        }
+
+        // CREDITS: Medical Insurance
+        const medicalInsurance = (totals.deductions.MDCL || 0) + (totals.deductions.MDCLP || 0);
+        if (medicalInsurance > 0) {
+            addLine('Insurance:Medical Insurance', 0, medicalInsurance);
+        }
+
+        // CREDITS: Bank account (Net pay for this location)
+        if (payrollData.netPay > 0 && payrollData.bankAccount) {
+            addLine(payrollData.bankAccount, 0, payrollData.netPay);
+            console.log(`💳 Bank Credit: ${payrollData.bankAccount} - $${payrollData.netPay.toFixed(2)}`);
+        } else {
+            console.warn('⚠️ No net pay or bank account found for journal entry');
+        }
+
+        return lines.join('\n') + '\n';
+    }
+
+    // Download single payroll journal entry CSV
+    downloadPayrollJournalEntry(payrollData, journalDate, journalNo) {
+        const csv = this.generatePayrollJournalEntryCSV(payrollData, journalDate, journalNo);
+        const filename = `Payroll_${journalNo}.csv`;
+        this.downloadCSV(filename, csv);
+    }
 }

@@ -69,16 +69,19 @@ class PDFParser {
         return lines;
     }
 
-    // Extract Store ID from filename (e.g., "fl008" from "September EOM report.pdf")
+    // Extract Store ID from filename (e.g., "fl008" from various filename patterns)
     extractStoreIdFromFilename(filename) {
-        // Try to match FL### pattern in filename
-        const match = filename.match(/fl\s*(\d+)/i);
+        // Try to match FL### pattern in filename (case insensitive)
+        // Handles: fl008.pdf, FL008.pdf, fl008 payroll.pdf, FL008-Payroll-09.30.25.pdf, etc.
+        const match = filename.match(/fl[\s\-_]*(\d+)/i);
         if (match) {
-            return `FL${match[1].padStart(3, '0')}`;
+            // Normalize to lowercase fl followed by padded number
+            const locationNum = match[1].padStart(3, '0');
+            return `fl${locationNum}`;
         }
 
         // If no match, use filename without extension as store ID
-        return filename.replace(/\.(pdf|PDF)$/, '').replace(/[^a-zA-Z0-9]/g, '_');
+        return filename.replace(/\.(pdf|PDF)$/, '').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     }
 
     // Extract Store ID from PDF text content

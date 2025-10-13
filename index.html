@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuickBooks Journal Entry Converter - Pizza</title>
+    <title>QuickBooks Journal Entry Converter</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,12 +11,59 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>QuickBooks Journal Entry Converter</h1>
-            <p class="subtitle">Pizza Brand - Sales Journal Entries</p>
-        </header>
+        <!-- HOME SECTION -->
+        <section id="homeSection" class="app-section active">
+            <header>
+                <h1>QuickBooks Journal Entry Converter</h1>
+                <p class="subtitle">Select a converter to get started</p>
+            </header>
 
-        <main>
+            <main>
+                <div class="converter-selection">
+                    <div class="converter-card" id="selectSalesConverter">
+                        <div class="converter-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="18" rx="2" ry="2"></rect>
+                                <line x1="8" y1="9" x2="16" y2="9"></line>
+                                <line x1="8" y1="13" x2="16" y2="13"></line>
+                                <line x1="8" y1="17" x2="12" y2="17"></line>
+                            </svg>
+                        </div>
+                        <h2>Sales Journal Entry Converter</h2>
+                        <p>Convert SpeedLine POS reports to QuickBooks journal entries</p>
+                        <button class="btn-primary">Open Sales Converter</button>
+                    </div>
+
+                    <div class="converter-card" id="selectPayrollConverter">
+                        <div class="converter-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <h2>Payroll Converter</h2>
+                        <p>Convert Paylocity payroll reports to QuickBooks journal entries</p>
+                        <button class="btn-primary">Open Payroll Converter</button>
+                    </div>
+                </div>
+            </main>
+
+            <footer>
+                <p>Built for Pizza Brand | QuickBooks Compatible Format</p>
+            </footer>
+        </section>
+
+        <!-- SALES CONVERTER SECTION -->
+        <section id="salesConverterSection" class="app-section">
+            <header>
+                <button class="btn-back" id="backFromSales">← Back to Home</button>
+                <h1>QuickBooks Journal Entry Converter</h1>
+                <p class="subtitle">Pizza Brand - Sales Journal Entries</p>
+            </header>
+
+            <main>
             <div class="upload-section">
                 <h2>Upload POS Reports</h2>
                 <p class="instructions">Upload multiple PDF files (End of Month reports from SpeedLine POS)</p>
@@ -65,11 +112,80 @@
                 </div>
                 <button class="btn-secondary" id="resetBtn">Process More Files</button>
             </div>
-        </main>
+            </main>
 
-        <footer>
-            <p>Built for Pizza Brand | QuickBooks Compatible Format</p>
-        </footer>
+            <footer>
+                <p>Built for Pizza Brand | QuickBooks Compatible Format</p>
+            </footer>
+        </section>
+
+        <!-- PAYROLL CONVERTER SECTION -->
+        <section id="payrollConverterSection" class="app-section">
+            <header>
+                <button class="btn-back" id="backFromPayroll">← Back to Home</button>
+                <h1>QuickBooks Journal Entry Converter</h1>
+                <p class="subtitle">Payroll - Journal Entries from Paylocity</p>
+            </header>
+
+            <main>
+            <div class="upload-section">
+                <h2>Upload Payroll Reports</h2>
+                <p class="instructions">Upload Paylocity Labor Distribution PDF files</p>
+
+                <div class="upload-area" id="uploadAreaPayroll">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Drop PDF files here or click to browse</p>
+                    <input type="file" id="fileInputPayroll" multiple accept=".pdf" hidden>
+                </div>
+
+                <div class="file-list" id="fileListPayroll"></div>
+
+                <div class="date-input-section">
+                    <label for="journalDatePayroll">Journal Entry Date:</label>
+                    <input type="date" id="journalDatePayroll" required>
+                </div>
+
+                <div class="journal-no-section">
+                    <label for="journalNoPayroll">Journal Entry Number:</label>
+                    <input type="text" id="journalNoPayroll" placeholder="e.g., Payroll 09.26.25" required>
+                </div>
+
+                <button id="processBtnPayroll" class="btn-primary" disabled>Process Files</button>
+            </div>
+
+            <div class="progress-section" id="progressSectionPayroll" style="display: none;">
+                <h3>Processing...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFillPayroll"></div>
+                </div>
+                <p id="progressTextPayroll">Preparing...</p>
+            </div>
+
+            <div class="results-section" id="resultsSectionPayroll" style="display: none;">
+                <h2>Results</h2>
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>Payroll Summary</h3>
+                        <p id="payrollSummary">Processing complete</p>
+                    </div>
+                    <div class="result-card">
+                        <h3>Journal Entry</h3>
+                        <p id="payrollJeInfo">Ready to download</p>
+                        <button class="btn-download" id="downloadPayrollJournalEntry">Download CSV</button>
+                    </div>
+                </div>
+                <button class="btn-secondary" id="resetBtnPayroll">Process More Files</button>
+            </div>
+            </main>
+
+            <footer>
+                <p>Built for Pizza Brand | QuickBooks Compatible Format</p>
+            </footer>
+        </section>
     </div>
 
     <!-- External Libraries -->
@@ -79,7 +195,9 @@
     <!-- Application Scripts -->
     <script src="js/pdf-parser.js"></script>
     <script src="js/csv-generator.js"></script>
+    <script src="js/location-bank-mapping.js"></script>
     <script src="js/converters/pizza-converter.js"></script>
+    <script src="js/converters/payroll-converter.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
