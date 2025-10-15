@@ -47,18 +47,6 @@
                         <p>Convert Paylocity payroll reports to QuickBooks journal entries</p>
                         <button class="btn-primary">Open Payroll Converter</button>
                     </div>
-
-                    <div class="converter-card" id="selectFoodSafetyTracker">
-                        <div class="converter-icon">
-                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                        </div>
-                        <h2>Food Safety Tracker</h2>
-                        <p>Track pizza slice hold times and ensure 1-hour discard compliance</p>
-                        <button class="btn-primary">Open Food Safety Tracker</button>
-                    </div>
                 </div>
             </main>
 
@@ -198,133 +186,6 @@
                 <p>Built for Pizza Brand | QuickBooks Compatible Format</p>
             </footer>
         </section>
-
-        <!-- FOOD SAFETY TRACKER SECTION -->
-        <section id="foodSafetySection" class="app-section">
-            <header>
-                <button class="btn-back" id="backFromFoodSafety">← Back to Home</button>
-                <h1>Food Safety Tracker</h1>
-                <p class="subtitle">Pizza Slice Hold Time Management - Delaware Health District Compliance</p>
-            </header>
-
-            <main>
-                <div class="food-safety-content">
-                    <!-- Add Batch Section -->
-                    <div class="add-batch-section">
-                        <h2>Track New Batch</h2>
-                        <p class="instructions">Pizza slices must be discarded after 1 hour out of the oven</p>
-                        <div class="add-batch-controls">
-                            <input type="text" id="batchDescription" placeholder="Batch description (e.g., Large Pepperoni - 8 slices)" value="Pizza Slices">
-                            <button id="addBatchBtn" class="btn-primary">Start Tracking Batch</button>
-                        </div>
-                    </div>
-
-                    <!-- Active Batches Section -->
-                    <div class="active-batches-section">
-                        <h2>Active Batches</h2>
-                        <div id="activeBatchesList" class="batches-list">
-                            <div class="empty-state">
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
-                                <p>No active batches. Add a batch to start tracking.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Daily Log Section -->
-                    <div class="daily-log-section">
-                        <h2>Today's Compliance Log</h2>
-                        <div class="log-summary" id="logSummary">
-                            <div class="log-stat">
-                                <span class="stat-label">Batches Discarded</span>
-                                <span class="stat-value" id="batchesDiscarded">0</span>
-                            </div>
-                            <div class="log-stat">
-                                <span class="stat-label">Compliance Status</span>
-                                <span class="stat-value" id="complianceStatus">N/A</span>
-                            </div>
-                        </div>
-                        <div id="todayDiscardedList" class="discarded-list"></div>
-                        <button id="exportLogBtn" class="btn-secondary">Export Daily Log (CSV)</button>
-                    </div>
-
-                    <!-- Reference Section -->
-                    <div class="reference-section">
-                        <h2>Food Safety Reference</h2>
-                        <div class="reference-tabs">
-                            <button class="tab-btn active" data-tab="pizza-rule">Pizza Slice Rule</button>
-                            <button class="tab-btn" data-tab="temperatures">Temperatures</button>
-                            <button class="tab-btn" data-tab="cooling">Cooling</button>
-                            <button class="tab-btn" data-tab="handwashing">Handwashing</button>
-                        </div>
-
-                        <div class="tab-content active" data-tab="pizza-rule">
-                            <div class="reference-card">
-                                <h3>1-Hour Pizza Slice Rule</h3>
-                                <p><strong>Hold Time:</strong> 60 minutes maximum</p>
-                                <p><strong>Warning:</strong> Alert at 50 minutes (10 min remaining)</p>
-                                <p><strong>Temperature:</strong> Must maintain 135°F or above during hold time</p>
-                                <p><strong>Action:</strong> Discard any pizza slices that exceed the 1-hour hold time</p>
-                            </div>
-                        </div>
-
-                        <div class="tab-content" data-tab="temperatures">
-                            <div class="reference-card">
-                                <h3>Critical Cooking Temperatures</h3>
-                                <ul>
-                                    <li><strong>165°F:</strong> Poultry, Reheated Leftovers</li>
-                                    <li><strong>155°F:</strong> Ground Beef/Pork, Raw Eggs (hot holding)</li>
-                                    <li><strong>145°F:</strong> Fish, Shellfish, Whole Beef/Pork/Lamb, Eggs (immediate service)</li>
-                                    <li><strong>135°F:</strong> Vegetables, Pre-cooked Foods, Hot Holding</li>
-                                </ul>
-                                <h3>Storage Temperatures</h3>
-                                <ul>
-                                    <li><strong>41°F or below:</strong> Cold Holding</li>
-                                    <li><strong>0°F or below:</strong> Freezer Storage</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="tab-content" data-tab="cooling">
-                            <div class="reference-card">
-                                <h3>Two-Stage Cooling Process</h3>
-                                <p><strong>Step 1:</strong> Cool from 135°F to 70°F within 2 hours</p>
-                                <p><strong>Step 2:</strong> Cool from 70°F to 41°F within 4 hours</p>
-                                <p><strong>Total Time:</strong> Maximum 6 hours total cooling time</p>
-                                <p><strong>Date Marking:</strong> Ready-to-eat TCS foods must be date marked and used or discarded within 7 days at 41°F or below</p>
-                            </div>
-                        </div>
-
-                        <div class="tab-content" data-tab="handwashing">
-                            <div class="reference-card">
-                                <h3>Handwashing Requirements</h3>
-                                <p><strong>Duration:</strong> Minimum 20 seconds</p>
-                                <h4>Wash Before:</h4>
-                                <ul>
-                                    <li>Your shift begins</li>
-                                    <li>Handling food</li>
-                                    <li>Putting on clean gloves</li>
-                                </ul>
-                                <h4>Wash After:</h4>
-                                <ul>
-                                    <li>Using the toilet</li>
-                                    <li>Handling raw foods</li>
-                                    <li>Taking a break/smoking</li>
-                                    <li>Coughing, sneezing, eating, drinking</li>
-                                    <li>Cleaning/taking out trash</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <footer>
-                <p>Based on Delaware General Health District Food Safety Standards</p>
-            </footer>
-        </section>
     </div>
 
     <!-- External Libraries -->
@@ -335,8 +196,6 @@
     <script src="js/pdf-parser.js"></script>
     <script src="js/csv-generator.js"></script>
     <script src="js/location-bank-mapping.js"></script>
-    <script src="js/food-safety-data.js"></script>
-    <script src="js/food-safety-tracker.js"></script>
     <script src="js/converters/pizza-converter.js"></script>
     <script src="js/converters/payroll-converter.js"></script>
     <script src="js/app.js"></script>

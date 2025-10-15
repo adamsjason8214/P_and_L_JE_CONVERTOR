@@ -480,220 +480,6 @@ class PayrollApp {
     }
 }
 
-// Food Safety Application Logic
-class FoodSafetyApp {
-    constructor() {
-        this.tracker = new FoodSafetyTracker();
-        this.updateInterval = null;
-
-        this.initializeElements();
-        this.initializeEventListeners();
-        this.updateDisplay();
-        this.startAutoUpdate();
-    }
-
-    initializeElements() {
-        this.batchDescription = document.getElementById('batchDescription');
-        this.addBatchBtn = document.getElementById('addBatchBtn');
-        this.activeBatchesList = document.getElementById('activeBatchesList');
-        this.batchesDiscarded = document.getElementById('batchesDiscarded');
-        this.complianceStatus = document.getElementById('complianceStatus');
-        this.todayDiscardedList = document.getElementById('todayDiscardedList');
-        this.exportLogBtn = document.getElementById('exportLogBtn');
-        this.tabBtns = document.querySelectorAll('.tab-btn');
-        this.tabContents = document.querySelectorAll('.tab-content');
-    }
-
-    initializeEventListeners() {
-        // Add batch button
-        this.addBatchBtn.addEventListener('click', () => {
-            this.addBatch();
-        });
-
-        // Enter key in description field
-        this.batchDescription.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.addBatch();
-            }
-        });
-
-        // Export log button
-        this.exportLogBtn.addEventListener('click', () => {
-            this.exportLog();
-        });
-
-        // Reference tabs
-        this.tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.switchTab(btn.dataset.tab);
-            });
-        });
-    }
-
-    addBatch() {
-        const description = this.batchDescription.value.trim() || 'Pizza Slices';
-        this.tracker.addBatch(description);
-        this.batchDescription.value = 'Pizza Slices';
-        this.updateDisplay();
-    }
-
-    updateDisplay() {
-        this.updateActiveBatches();
-        this.updateDailyLog();
-    }
-
-    updateActiveBatches() {
-        const batches = this.tracker.getActiveBatches();
-
-        if (batches.length === 0) {
-            this.activeBatchesList.innerHTML = `
-                <div class="empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <p>No active batches. Add a batch to start tracking.</p>
-                </div>
-            `;
-            return;
-        }
-
-        this.activeBatchesList.innerHTML = batches.map(batch => {
-            const minutes = Math.floor(batch.timeRemaining);
-            const seconds = Math.floor((batch.timeRemaining - minutes) * 60);
-            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-            const startTime = new Date(batch.startTime).toLocaleTimeString();
-            const statusClass = batch.status; // safe, warning, expired
-
-            let statusIcon = '';
-            let statusText = '';
-            if (batch.status === 'safe') {
-                statusIcon = '✓';
-                statusText = 'Safe';
-            } else if (batch.status === 'warning') {
-                statusIcon = '⚠';
-                statusText = 'Warning - Discard Soon';
-            } else {
-                statusIcon = '✗';
-                statusText = 'EXPIRED - Discard Now';
-            }
-
-            return `
-                <div class="batch-card ${statusClass}">
-                    <div class="batch-header">
-                        <div class="batch-info">
-                            <h4>${batch.description}</h4>
-                            <p class="batch-time">Started: ${startTime}</p>
-                        </div>
-                        <div class="batch-status ${statusClass}">
-                            <span class="status-icon">${statusIcon}</span>
-                            <span class="status-text">${statusText}</span>
-                        </div>
-                    </div>
-                    <div class="batch-timer ${statusClass}">
-                        <div class="timer-display">${timeString}</div>
-                        <div class="timer-label">${batch.status === 'expired' ? 'OVER LIMIT' : 'remaining'}</div>
-                    </div>
-                    <button class="btn-discard" onclick="foodSafetyApp.discardBatch(${batch.id})">
-                        Discard Batch
-                    </button>
-                </div>
-            `;
-        }).join('');
-    }
-
-    updateDailyLog() {
-        const todayBatches = this.tracker.getTodayDiscarded();
-        this.batchesDiscarded.textContent = todayBatches.length;
-
-        if (todayBatches.length === 0) {
-            this.complianceStatus.textContent = 'N/A';
-            this.complianceStatus.className = 'stat-value';
-            this.todayDiscardedList.innerHTML = '<p class="empty-log">No batches discarded yet today.</p>';
-        } else {
-            const log = this.tracker.generateDailyLog();
-            this.complianceStatus.textContent = log.compliance ? 'PASS' : 'FAIL';
-            this.complianceStatus.className = `stat-value ${log.compliance ? 'compliance-pass' : 'compliance-fail'}`;
-
-            this.todayDiscardedList.innerHTML = todayBatches.map(batch => {
-                const startTime = new Date(batch.startTime).toLocaleTimeString();
-                const discardTime = new Date(batch.discardTime).toLocaleTimeString();
-                const elapsed = Math.round((new Date(batch.discardTime) - new Date(batch.startTime)) / 1000 / 60);
-                const withinLimit = elapsed <= batch.holdTimeMinutes;
-
-                return `
-                    <div class="discarded-item ${withinLimit ? 'compliant' : 'non-compliant'}">
-                        <div class="discarded-info">
-                            <strong>${batch.description}</strong>
-                            <p>Started: ${startTime} | Discarded: ${discardTime}</p>
-                            <p>Hold Time: ${elapsed} minutes</p>
-                        </div>
-                        <div class="discarded-status ${withinLimit ? 'compliant' : 'non-compliant'}">
-                            ${withinLimit ? '✓ Compliant' : '✗ Over Limit'}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-
-    discardBatch(batchId) {
-        this.tracker.discardBatch(batchId);
-        this.updateDisplay();
-    }
-
-    exportLog() {
-        const csv = this.tracker.exportDailyLogCSV();
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        const today = new Date().toISOString().split('T')[0];
-
-        link.setAttribute('href', url);
-        link.setAttribute('download', `food-safety-log-${today}.csv`);
-        link.style.visibility = 'hidden';
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    switchTab(tabName) {
-        // Update tab buttons
-        this.tabBtns.forEach(btn => {
-            if (btn.dataset.tab === tabName) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-
-        // Update tab contents
-        this.tabContents.forEach(content => {
-            if (content.dataset.tab === tabName) {
-                content.classList.add('active');
-            } else {
-                content.classList.remove('active');
-            }
-        });
-    }
-
-    startAutoUpdate() {
-        // Update every second for real-time countdown
-        this.updateInterval = setInterval(() => {
-            this.updateDisplay();
-        }, 1000);
-    }
-
-    stopAutoUpdate() {
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval);
-            this.updateInterval = null;
-        }
-    }
-}
-
 // Application Controller - manages navigation between converters
 class AppController {
     constructor() {
@@ -711,20 +497,12 @@ class AppController {
             this.showSection('payroll');
         });
 
-        document.getElementById('selectFoodSafetyTracker').addEventListener('click', () => {
-            this.showSection('foodSafety');
-        });
-
         // Back buttons
         document.getElementById('backFromSales').addEventListener('click', () => {
             this.showSection('home');
         });
 
         document.getElementById('backFromPayroll').addEventListener('click', () => {
-            this.showSection('home');
-        });
-
-        document.getElementById('backFromFoodSafety').addEventListener('click', () => {
             this.showSection('home');
         });
     }
@@ -746,9 +524,6 @@ class AppController {
             case 'payroll':
                 document.getElementById('payrollConverterSection').classList.add('active');
                 break;
-            case 'foodSafety':
-                document.getElementById('foodSafetySection').classList.add('active');
-                break;
         }
 
         this.currentSection = sectionName;
@@ -756,10 +531,9 @@ class AppController {
 }
 
 // Initialize applications when DOM is ready
-let salesApp, payrollApp, foodSafetyApp, appController;
+let salesApp, payrollApp, appController;
 document.addEventListener('DOMContentLoaded', () => {
     appController = new AppController();
     salesApp = new SalesApp();
     payrollApp = new PayrollApp();
-    foodSafetyApp = new FoodSafetyApp();
 });
